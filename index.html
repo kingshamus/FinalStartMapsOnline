@@ -80,7 +80,13 @@
   
   <!-- Table Container -->
   <div id="tableContainer" style="display: none;">
-    <div id="tableElement"></div>
+    <!-- Set data-layout to "fitDataFill" for responsive layout -->
+    <div id="tableElement" data-layout="fitDataFill">
+      <!-- Define table columns with data-min-width attribute -->
+      <div data-field="Name" data-min-width="200">Name</div>
+      <div data-field="Start_Time_UTC" data-min-width="150">Start Time (UTC)</div>
+      <div data-field="Link" data-formatter="link" data-formatter-params='{"label": "Visit", "target": "_blank"}' data-min-width="100">Link</div>
+    </div>
   </div>
 
   <!-- Include Tabulator JS -->
