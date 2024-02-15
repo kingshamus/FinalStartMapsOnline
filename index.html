@@ -58,11 +58,11 @@
     }
 
     #tableContainer {
-  position: absolute;
-  top: calc(10% + 20px); /* Adjust this value as needed */
-  left: 50%;
-  transform: translateX(-50%);
-}
+      position: absolute;
+      top: calc(10% + 20px); /* Adjust this value as needed */
+      left: 50%;
+      transform: translateX(-50%);
+    }
   </style>
 </head>
 <body>
@@ -181,15 +181,19 @@
           }));
 
           const tableData = {
-            columns: [
-              { title: 'Name', field: 'Name' },
-              { title: 'Start Time (UTC)', field: 'Start_Time_UTC' },
-              { title: 'Link', field: 'Link', formatter: 'link', formatterParams: { label: 'Visit', target: '_blank' } }
-            ],
             data: formattedTournaments
           };
 
-          const table = new Tabulator("#tableElement", tableData);
+          // Initialize Tabulator with responsive layout and minimum column widths
+          const table = new Tabulator("#tableElement", {
+            layout: "fitDataFill",
+            columns: [
+              { title: 'Name', field: 'Name', minWidth: 200 },
+              { title: 'Start Time (UTC)', field: 'Start_Time_UTC', minWidth: 150 },
+              { title: 'Link', field: 'Link', formatter: 'link', formatterParams: { label: 'Visit', target: '_blank' }, minWidth: 100 }
+            ],
+            data: formattedTournaments
+          });
 
           // Hide loading spinner
           document.getElementById('loadingSpinner').style.display = 'none';
