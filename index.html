@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tournament Table</title>
+  <!-- Include Tabulator CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.1.0/css/tabulator.min.css" rel="stylesheet">
+  <!-- Include Font Awesome for the spinner -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+  <!-- Include Awesomplete library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.2/awesomplete.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.2/awesomplete.css" />
+  <!-- Include your styles.css file -->
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Add custom styles */
+    #search-container {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      width: 300px;
+      margin-right: 10px;
+    }
+
+    .search-button {
+      padding: 10px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+      display: none; /* Hide spinner by default */
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    #tableContainer {
+  position: absolute;
+  top: calc(10% + 20px); /* Adjust this value as needed */
+  left: 50%;
+  transform: translateX(-50%);
+}
+  </style>
+</head>
+<body>
+  <div id="search-container">
+    <div id="search-bar">
+      <!-- Search Input with Autocomplete -->
+      <input type="text" id="gameName" class="search-input" placeholder="Select a game..." list="gameList">
+      <datalist id="gameList"></datalist>
+      <!-- Search Button with Magnifying Glass Icon -->
+      <button id="search-button" class="search-button" onclick="generateSpreadsheet()"><i class="fas fa-search"></i></button>
+      <!-- Loading Spinner for Table -->
+      <div id="loadingSpinner" class="spinner"><i class="fas fa-spinner fa-spin fa-3x"></i></div>
+    </div>
+  </div>
+  
+  <!-- Table Container -->
+  <div id="tableContainer" style="display: none;">
+    <div id="tableElement"></div>
+  </div>
+
+  <!-- Include Tabulator JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.1.0/js/tabulator.min.js"></script>
+  <!-- Include Moment.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+  <!-- Include Axios -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script>
+    let cacheData; // Define cacheData in the global scope
+
+    // Fetch cache.json file
+    axios.get('cache.json')
+      .then(response => {
+        cacheData = response.data; // Assign the fetched data to cacheData
+        const gameNames = cacheData.entities.videogame.map(game => game.name);
+
+        // Set up autofill for the search bar
+        const gameNameInput = document.getElementById('gameName');
+        const gameList = document.getElementById('gameList');
+        gameNames.forEach(name => {
+          const option = document.createElement('option');
+          option.value = name;
+          gameList.appendChild(option);
+        });
+      })
+      .catch(error => {
+        console.error('Error fetching cache.json:', error);
+      });
+
+    function generateSpreadsheet() {
+      const gameName = document.getElementById('gameName').value;
+      const gameId = getGameIdFromName(gameName);
+      if (gameId) {
+        fetchTournaments(gameId);
+      } else {
+        alert('Invalid game name');
+      }
+    }
+
+    function getGameIdFromName(gameName) {
+      const game = cacheData.entities.videogame.find(game => game.name === gameName);
+      return game ? game.id : null;
+    }
+
+    function fetchTournaments(gameId) {
+      const token = "fce7d38cd20cfa58739be8d97eb2358b";
+      const headers = { "Authorization": "Bearer " + token };
+
+      const query = `query TournamentsByVideogame($perPage: Int!, $videogameId: ID!) {
+        tournaments(query: {
+          perPage: $perPage
+          page: 1
+          sortBy: "startAt asc"
+          filter: {
+            upcoming: true
+            videogameIds: [
+              $videogameId
+            ]
+          }
+        }) {
+          nodes {
+            name
+            url
+            isRegistrationOpen
+            startAt
+            isOnline
+            countryCode
+          }
+        }
+      }`;
+
+      const variables = {
+        perPage: 300,
+        videogameId: parseInt(gameId)
+      };
+
+      const url = 'https://api.start.gg/gql/alpha';
+
+      // Show loading spinner
+      document.getElementById('loadingSpinner').style.display = 'block';
+
+      axios.post(url, { query, variables }, { headers })
+        .then(response => {
+          const tournaments = response.data.data.tournaments.nodes;
+          const filteredTournaments = tournaments.filter(tournament => tournament.isRegistrationOpen && tournament.isOnline);
+
+          const formattedTournaments = filteredTournaments.map(tournament => ({
+            Name: tournament.name,
+            Start_Time_UTC: moment.unix(tournament.startAt).utc().format('YYYY-MM-DD HH:mm:ss'),
+            Link: `https://start.gg${tournament.url}`
+          }));
+
+          const tableData = {
+            columns: [
+              { title: 'Name', field: 'Name' },
+              { title: 'Start Time (UTC)', field: 'Start_Time_UTC' },
+              { title: 'Link', field: 'Link', formatter: 'link', formatterParams: { label: 'Visit', target: '_blank' } }
+            ],
+            data: formattedTournaments
+          };
+
+          const table = new Tabulator("#tableElement", tableData);
+
+          // Hide loading spinner
+          document.getElementById('loadingSpinner').style.display = 'none';
+
+          // Show table container
+          document.getElementById('tableContainer').style.display = 'block';
+        })
+        .catch(error => {
+          console.error('Error fetching tournaments:', error);
+        });
+    }
+  </script>
+</body>
+</html>
