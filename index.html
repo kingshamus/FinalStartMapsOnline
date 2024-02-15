@@ -41,26 +41,6 @@
       cursor: pointer;
     }
 
-    .spinner {
-  border: 5px solid #f3f3f3;
-  border-top: 5px solid #3498db;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  animation: spin 1s linear infinite;
-  position: fixed; /* Change to fixed positioning */
-  top: 50%; /* Position at 50% from the top */
-  left: 50%; /* Position at 50% from the left */
-  transform: translate(-50%, -50%); /* Center the spinner */
-  z-index: 9999; /* Ensure spinner appears on top of other elements */
-  display: none; /* Hide spinner by default */
-}
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
     #tableContainer {
       position: absolute;
       top: calc(10% + 20px); /* Adjust this value as needed */
@@ -68,9 +48,30 @@
       transform: translateX(-50%);
       width: 100%;
     }
+
     #tableElement {
-  max-width: 100%; /* Set max-width to 100% */
-}
+      max-width: 100%; /* Set max-width to 100% */
+    }
+
+    .spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      position: fixed; /* Change to fixed positioning */
+      top: 50%; /* Position at 50% from the top */
+      left: 50%; /* Position at 50% from the left */
+      transform: translate(-50%, -50%); /* Center the spinner */
+      z-index: 9999; /* Ensure spinner appears on top of other elements */
+      display: none; /* Hide spinner by default */
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -81,10 +82,11 @@
       <datalist id="gameList"></datalist>
       <!-- Search Button with Magnifying Glass Icon -->
       <button id="search-button" class="search-button" onclick="generateSpreadsheet()"><i class="fas fa-search"></i></button>
-      <!-- Loading Spinner for Table -->
-      <div id="loadingSpinner" class="spinner"><i class="fas fa-spinner fa-spin fa-3x"></i></div>
     </div>
   </div>
+  
+  <!-- Loading Spinner for Table -->
+  <div id="loadingSpinner" class="spinner"></div>
   
   <!-- Table Container -->
   <div id="tableContainer" style="display: none;">
