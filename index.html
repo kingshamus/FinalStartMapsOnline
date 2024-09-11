@@ -15,6 +15,12 @@
   <link rel="stylesheet" href="styles.css">
   <style>
     /* Add custom styles */
+    #ad-banner {
+      width: 100%;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
     #search-container {
       display: flex;
       flex-direction: row;
@@ -75,6 +81,20 @@
   </style>
 </head>
 <body>
+  <!-- Ad Banner -->
+  <div id="ad-banner">
+    <script type="text/javascript">
+      atOptions = {
+        'key' : 'f56223c841b15c6d94f146e88642558f',
+        'format' : 'iframe',
+        'height' : 60,
+        'width' : 468,
+        'params' : {}
+      };
+    </script>
+    <script type="text/javascript" src="//www.topcreativeformat.com/f56223c841b15c6d94f146e88642558f/invoke.js"></script>
+  </div>
+
   <div id="search-container">
     <div id="search-bar">
       <!-- Search Input with Autocomplete -->
@@ -88,21 +108,21 @@
   <!-- Loading Spinner for Table -->
   <div id="loadingSpinner" class="spinner"></div>
   
-<!-- Table Container -->
-<div id="tableContainer" style="display: none;">
-  <!-- Set data-layout to "fitDataFill" for responsive layout -->
-  <div id="tableElement" data-layout="fitDataFill">
-    <!-- Define table columns with data-min-width attribute -->
-    <div data-field="Name" data-min-width="200" data-max-width="200">Name</div>
-    <div data-field="Start_Time_UTC" data-min-width="150" data-max-width="150">Start Time (UTC)</div>
-    <div data-field="Country_Code" data-min-width="100" data-max-width="100">Country Code</div>
-    <div data-field="State" data-min-width="100" data-max-width="100">State</div>
-    <div data-field="City" data-min-width="100" data-max-width="100">City</div>
-    <div data-field="Attendees" data-min-width="100" data-max-width="100">Attendees</div>
-    <div data-field="Is_Online" data-min-width="100" data-max-width="100">Is Online?</div>
-    <div data-field="Link" data-formatter="link" data-formatter-params='{"label": "Visit", "target": "_blank"}' data-min-width="100" data-max-width="100">Link</div>
+  <!-- Table Container -->
+  <div id="tableContainer" style="display: none;">
+    <!-- Set data-layout to "fitDataFill" for responsive layout -->
+    <div id="tableElement" data-layout="fitDataFill">
+      <!-- Define table columns with data-min-width attribute -->
+      <div data-field="Name" data-min-width="200" data-max-width="200">Name</div>
+      <div data-field="Start_Time_UTC" data-min-width="150" data-max-width="150">Start Time (UTC)</div>
+      <div data-field="Country_Code" data-min-width="100" data-max-width="100">Country Code</div>
+      <div data-field="State" data-min-width="100" data-max-width="100">State</div>
+      <div data-field="City" data-min-width="100" data-max-width="100">City</div>
+      <div data-field="Attendees" data-min-width="100" data-max-width="100">Attendees</div>
+      <div data-field="Is_Online" data-min-width="100" data-max-width="100">Is Online?</div>
+      <div data-field="Link" data-formatter="link" data-formatter-params='{"label": "Visit", "target": "_blank"}' data-min-width="100" data-max-width="100">Link</div>
+    </div>
   </div>
-</div>
 
   <!-- Include Tabulator JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tabulator/5.1.0/js/tabulator.min.js"></script>
@@ -210,51 +230,40 @@
         // Execute promises in parallel
         Promise.all(pagePromises)
             .then(results => {
-                // Flatten the array of arrays into a single array of tournaments
-                const allTournaments = results.flat();
+                // Combine all results into a single array
+                let allTournaments = results.flat();
     
-                const formattedTournaments = allTournaments.map(tournament => ({
-                    Name: tournament.name,
-                    Start_Time_UTC: moment.unix(tournament.startAt).utc().format('YYYY-MM-DD HH:mm:ss'),
-                    Country_Code: tournament.countryCode,
-                    State: tournament.addrState,
-                    City: tournament.city,
-                    Attendees: tournament.numAttendees,
-                    Is_Online: tournament.isOnline ? "Yes" : "No",
-                    Link: `https://start.gg${tournament.url}`
-                }));
-    
-                const tableData = {
-                    data: formattedTournaments
-                };
-    
-                // Initialize Tabulator with responsive layout and minimum column widths
-                const table = new Tabulator("#tableElement", {
-                    layout: "fitDataFill",
-                    columns: [
-                        { title: 'Name', field: 'Name', minWidth: 200, maxWidth: 200, headerFilter: false },
-                        { title: 'Start Time (UTC)', field: 'Start_Time_UTC', minWidth: 150, maxWidth: 150, headerFilter: false },
-                        { title: 'Country Code', field: 'Country_Code', minWidth: 100, maxWidth: 100, headerFilter: "select", headerFilterParams: { values: true } },
-                        { title: 'State', field: 'State', minWidth: 100, maxWidth: 100, headerFilter: "select", headerFilterParams: { values: true } },
-                        { title: 'City', field: 'City', minWidth: 100, maxWidth: 100, headerFilter: "select", headerFilterParams: { values: true } },
-                        { title: 'Attendees', field: 'Attendees', minWidth: 100, maxWidth: 100, headerFilter: false },
-                        { title: 'Is Online?', field: 'Is_Online', minWidth: 100, maxWidth: 100, headerFilter: "select", headerFilterParams: { values: true } },
-                        { title: 'Link', field: 'Link', formatter: 'link', formatterParams: { label: 'Visit', target: '_blank' }, minWidth: 100, maxWidth: 100 }
-                    ],
-                    data: formattedTournaments
-                });
-    
-                // Hide loading spinner
-                document.getElementById('loadingSpinner').style.display = 'none';
-    
-                // Show table container
-                document.getElementById('tableContainer').style.display = 'block';
+                // Process the tournaments data and create the table
+                createTable(allTournaments);
             })
             .catch(error => {
                 console.error('Error fetching tournaments:', error);
-                // Hide loading spinner in case of error
+            })
+            .finally(() => {
+                // Hide loading spinner
                 document.getElementById('loadingSpinner').style.display = 'none';
             });
+    }
+
+    function createTable(tournaments) {
+        // Initialize the Tabulator table
+        const table = new Tabulator("#tableElement", {
+            data: tournaments,
+            layout: "fitDataFill",
+            columns: [
+                { title: "Name", field: "name" },
+                { title: "Start Time (UTC)", field: "startAt", formatter: "datetime", formatterParams: { outputFormat: "YYYY-MM-DD HH:mm:ss" } },
+                { title: "Country Code", field: "countryCode" },
+                { title: "State", field: "addrState" },
+                { title: "City", field: "city" },
+                { title: "Attendees", field: "numAttendees" },
+                { title: "Is Online?", field: "isOnline", formatter: "tickCross" },
+                { title: "Link", field: "url", formatter: "link", formatterParams: { label: "Visit", target: "_blank" } }
+            ]
+        });
+
+        // Show the table container
+        document.getElementById('tableContainer').style.display = 'block';
     }
   </script>
 </body>
